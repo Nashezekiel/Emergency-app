@@ -21,6 +21,7 @@ export default function PanicScreen() {
   const [countdown, setCountdown] = useState(5);
   const [isCancelled, setIsCancelled] = useState(false);
   const [isDispatching, setIsDispatching] = useState(false);
+  const [sent, setSent] = useState(false);
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const hasSubmittedRef = useRef(false);
   const retryAttemptRef = useRef(0);
