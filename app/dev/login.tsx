@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/use-colors";
 import { useRouter } from "expo-router";
 import * as Auth from "@/lib/_core/auth";
+import { removeSessionToken, clearUserInfo } from "@/lib/_core/auth";
 import { useEffect, useState } from "react";
 import { trpc } from "@/lib/trpc";
 
@@ -73,9 +74,14 @@ export default function LoginScreen() {
     }
   };
 
-  // Dev shortcut
+  // Dev shortcut — always wipes the previous session first so switching
+  // roles on Android never gets stuck in a stale cache.
   const handleDevLogin = async (role: "civilian" | "responder") => {
     try {
+      // Clear any existing session before switching role
+      await removeSessionToken();
+      await clearUserInfo();
+
       const mockUser = {
         id: role === "responder" ? "mock-responder-id" : "mock-civilian-id",
         openId: role === "responder" ? "mock-responder-id" : "mock-civilian-id",
@@ -94,6 +100,18 @@ export default function LoginScreen() {
     } catch (e) {
       console.error(e);
       Alert.alert("Error", "Failed to login");
+    }
+  };
+
+  // Escape hatch: clears any stale cached session (fixes Android auto-login)
+  const handleClearSession = async () => {
+    try {
+      await removeSessionToken();
+      await clearUserInfo();
+      Alert.alert("Session Cleared", "Cached session removed. You are now logged out.");
+      await refresh();
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -226,6 +244,14 @@ export default function LoginScreen() {
               <Text className="text-xs font-bold text-foreground">Skip to Responder</Text>
             </Pressable>
           </View>
+
+          {/* Android fix: clear stale cached session */}
+          <Pressable
+            onPress={handleClearSession}
+            className="bg-surface border border-border p-3 rounded-xl items-center"
+          >
+            <Text className="text-xs font-semibold text-muted">🗑️ Clear Cached Session (Android Fix)</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </ScreenContainer>

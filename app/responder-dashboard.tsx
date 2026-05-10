@@ -1,4 +1,4 @@
-import { ScrollView, Text, View, FlatList, Pressable, ActivityIndicator } from "react-native";
+import { ScrollView, Text, View, FlatList, Pressable, ActivityIndicator, Alert } from "react-native";
 import { useState } from "react";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
@@ -43,6 +43,20 @@ export default function ResponderDashboard() {
   const { user, logout } = useAuth();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>("all");
+
+  const handleLogout = () => {
+    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: async () => {
+          await logout();
+          router.replace("/dev/login");
+        },
+      },
+    ]);
+  };
 
   const { data: incidents, isLoading, error, refetch, dataUpdatedAt } = trpc.incidents.getResponderDashboard.useQuery({
     status: statusFilter === "all" ? undefined : statusFilter,
@@ -178,15 +192,27 @@ export default function ResponderDashboard() {
         {/* Header */}
         <View className="px-5 pt-6 pb-4 border-b border-border bg-surface">
           <View className="flex-row items-center justify-between">
-            <View>
+            <View className="flex-1">
+              <Text className="text-xs font-medium text-muted mb-0.5">
+                Welcome back, {user?.name?.split(" ")[0] || "Responder"}
+              </Text>
               <Text className="text-3xl font-extrabold text-foreground">Incident Command</Text>
               <Text className="text-sm text-muted mt-1">Real-time emergency management</Text>
             </View>
-            <Pressable onPress={() => refetch()} style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}>
-              <View className="w-10 h-10 bg-surface rounded-full items-center justify-center border border-border">
-                <IconSymbol name="arrow.clockwise" size={18} color={colors.primary} />
-              </View>
-            </Pressable>
+            <View className="flex-row items-center gap-2">
+              {/* Refresh */}
+              <Pressable onPress={() => refetch()} style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}>
+                <View className="w-10 h-10 bg-surface rounded-full items-center justify-center border border-border">
+                  <IconSymbol name="arrow.clockwise" size={18} color={colors.primary} />
+                </View>
+              </Pressable>
+              {/* Sign Out */}
+              <Pressable onPress={handleLogout} style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}>
+                <View className="w-10 h-10 bg-surface rounded-full items-center justify-center border border-border">
+                  <IconSymbol name="rectangle.portrait.and.arrow.right" size={18} color={colors.error} />
+                </View>
+              </Pressable>
+            </View>
           </View>
         </View>
 
